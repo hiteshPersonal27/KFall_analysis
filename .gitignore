@@ -1,0 +1,18 @@
+# Python
+__pycache__/
+*.pyc
+
+# Virtual environment
+venv/
+
+# Raw dataset (large; regeneratable from the zips, or exclude the zips too if
+# storing data elsewhere)
+sensor_data/
+label_data/
+*.zip
+
+# Jupyter
+.ipynb_checkpoints/
+
+# OS
+.DS_Store
