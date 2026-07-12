@@ -11,6 +11,12 @@ sensor_data/
 label_data/
 *.zip
 
+# Large generated interactive HTML (regenerable from the build scripts; the
+# dashboard embeds every trial and is ~26 MB). Remove these lines if you want them
+# version-controlled.
+fall_pattern_analysis/signal_quality/signal_dashboard.html
+fall_pattern_analysis/signal_quality/signal_quality.html
+
 # Jupyter
 .ipynb_checkpoints/
 
