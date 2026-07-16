@@ -414,9 +414,8 @@ const GRID = "#dcdcdc", REF = "#888";
 const AXIS_FONT = { family: "Helvetica, Arial, sans-serif", size: 13, color: "#333" };
 const X_FALL = "Phase (% of onset→impact)";
 const X_ADL  = "Phase (% of trial duration: start→end)";
-const ADL_NOTE = { x: 0.5, y: 1.05, xref: "paper", yref: "paper", showarrow: false,
-  font: { size: 11, color: "#c0392b" },
-  text: "ADL task: phase = 0% trial start → 100% trial end (no fall onset/impact labels)" };
+// ADL axis meaning is already shown in the #note banner above the chart -- no
+// in-plot annotation, which used to overlap the chart title.
 
 const $ = id => document.getElementById(id);
 function fill(sel, items, val, text) {
@@ -497,7 +496,6 @@ function renderMode1() {
     + `(${ch}, ${betaLabel(bkey)}, SG window=${w})`;
   const L = baseLayout(2, `${ch} (${CH_UNITS[ch]})`, `${betaLabel(bkey)} (${betaUnit(ch,bkey)})`,
     RAW_RANGE[ch].slice(), BETA_RANGE[w][ch][bkey].slice(), title, isAdl ? X_ADL : X_FALL);
-  if (isAdl) L.annotations = [ADL_NOTE];
 
   const traces = [];
   if (!rec) { Plotly.react("chart", [], L, {responsive:true}); return; }
@@ -524,13 +522,13 @@ function renderMode2() {
   const isAdl = group === "adl";
   const ids = isAdl ? ADL_IDS : FALL_IDS;
   $("note").textContent = "Each line is that task's OWN mean β curve — no cross-task blending, "
-    + "so heterogeneity between fall/ADL types stays visible.";
+    + "so heterogeneity between fall/ADL types stays visible."
+    + (isAdl ? "  (ADL group: x-axis = 0% trial start → 100% trial end.)" : "");
 
   const title = `Mode 2  SA${String(subj).padStart(2,"0")} — all ${isAdl?"ADL":"fall"} tasks `
     + `(mean per task, ${ch}, ${betaLabel(bkey)}, SG window=${w})`;
   const L = baseLayout(1, `${betaLabel(bkey)} (${betaUnit(ch,bkey)})`, null,
     BETA_RANGE[w][ch][bkey].slice(), null, title, isAdl ? X_ADL : X_FALL);
-  if (isAdl) L.annotations = [ADL_NOTE];
 
   const traces = []; const colors = palette(ids.length);
   ids.forEach((tid, i) => {
