@@ -10,6 +10,7 @@ Two tools live here:
 |---|---|
 | `build_signal_dashboard.py` → `signal_dashboard.html` | **Interactive dashboard** with subject/task/mode selection (see below). The main tool. |
 | `build_signal_quality.py` → `signal_quality.html` | Simpler grand-average-only view (mean ± 1 std across all fall trials), no selectors. |
+| `export_mode3_screenshots.py` → `mode3_screenshots/` | Static PNG export of every Mode-3 plot (Task, all subjects), one image per task for each of the 3 sensors (108 PNGs), organized in `mode3_screenshots/<Sensor>/`. |
 
 ---
 
@@ -28,12 +29,19 @@ Prints trials loaded per mode (expected 2,319 fall + ~2,717 ADL).
    **or** 21 ADL tasks D01–D21). Shows that subject's individual trials as thin
    lines + their mean as a bold line. No std band — kept sharp. Use this to compare
    a fall against a normal activity for the same person.
-2. **Subject, all falls** — pick a subject; overlays each fall task's mean as one
-   line, colored by task, with a legend.
-3. **Fall, all subjects** — pick a fall task; overlays all 32 subjects' means, one
-   line each.
+2. **Subject, all tasks** — pick a subject and a **task group (Falls / ADLs)**;
+   overlays each task's mean in that group as one line, colored by task, with a
+   legend.
+3. **Task, all subjects** — pick any task (fall **or** ADL); overlays all 32
+   subjects' means, one line each.
 
-Modes 2 & 3 are **falls-only** so the onset→impact x-axis has a single meaning.
+The overlays stay **single-family** (all falls *or* all ADLs, never mixed) so the
+x-axis keeps one consistent meaning:
+- **Fall tasks**: x = *% of onset→impact* (0% = labeled onset, 100% = labeled impact).
+- **ADL tasks**: x = *% of trial duration* (0% = trial start, 100% = trial end),
+  since ADLs have no fall onset/impact labels. A red note appears above the plot and
+  the x-axis label switches automatically whenever ADLs are shown.
+
 The per-sensor dropdown (Accelerometer / Gyroscope / Orientation) applies in all
 modes. Mode 1 shows a magnitude panel + a raw-3-axes panel; overlay modes show one
 clean line per entity on the sensor's primary channel (ACC_M / gyro magnitude /

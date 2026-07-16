@@ -258,12 +258,14 @@ def build_html(subjects, all_task_ids, task_labels, data, yrange, counts):
 
     tasks_meta = [{"id": t, **task_labels[t]} for t in all_task_ids]
     fall_ids = [t for t in all_task_ids if task_labels[t]["type"] == "fall"]
+    adl_ids = [t for t in all_task_ids if task_labels[t]["type"] == "adl"]
 
     payload = {
         "phase": [float(x) for x in PHASE_GRID],
         "subjects": subjects,
         "tasks": tasks_meta,
         "fall_ids": fall_ids,
+        "adl_ids": adl_ids,
         "sensors": sensor_meta,
         "data": data,
         "counts": counts,
@@ -300,12 +302,15 @@ _HTML_TEMPLATE = r"""<!doctype html>
   <div class="grp"><label>View mode</label>
     <div class="modes">
       <label><input type="radio" name="mode" value="1" checked> Subject &times; Task</label>
-      <label><input type="radio" name="mode" value="2"> Subject, all falls</label>
-      <label><input type="radio" name="mode" value="3"> Fall, all subjects</label>
+      <label><input type="radio" name="mode" value="2"> Subject, all tasks</label>
+      <label><input type="radio" name="mode" value="3"> Task, all subjects</label>
     </div>
   </div>
   <div class="grp"><label>Sensor</label>
     <select id="sensor"></select></div>
+  <div class="grp" id="groupWrap"><label>Task group</label>
+    <select id="group"><option value="fall">Falls (F01–F15)</option>
+      <option value="adl">ADLs (D01–D21)</option></select></div>
   <div class="grp" id="subjWrap"><label>Subject</label>
     <select id="subject"></select></div>
   <div class="grp" id="taskWrap"><label>Task</label>
@@ -317,11 +322,18 @@ _HTML_TEMPLATE = r"""<!doctype html>
 <script>
 const DB = "/*DATA*/";
 const PHASE = DB.phase, SUBJECTS = DB.subjects, TASKS = DB.tasks, FALL_IDS = DB.fall_ids,
-      SENSORS = DB.sensors, DATA = DB.data;
+      ADL_IDS = DB.adl_ids, SENSORS = DB.sensors, DATA = DB.data;
 const TASK_BY_ID = {}; TASKS.forEach(t => TASK_BY_ID[t.id] = t);
 
 const GRID = "#dcdcdc", REF = "#888";
 const AXIS_FONT = { family: "Helvetica, Arial, sans-serif", size: 13, color: "#333" };
+// X-axis meaning differs by task type: falls anchor on onset->impact; ADLs have no
+// such event, so they anchor on their own full trial duration.
+const X_FALL = "Phase (% of onset→impact)";
+const X_ADL  = "Phase (% of trial duration: start→end)";
+const ADL_NOTE = { x: 0.5, y: 1.045, xref: "paper", yref: "paper", showarrow: false,
+  font: { size: 11, color: "#c0392b" },
+  text: "ADL task: phase = 0% trial start → 100% trial end (no fall onset/impact labels)" };
 
 // ---- controls ----
 const $ = id => document.getElementById(id);
@@ -338,12 +350,16 @@ function currentMode() { return document.querySelector('input[name=mode]:checked
 
 function syncControls() {
   const m = currentMode();
-  // Task selector: full set in mode 1, falls-only in mode 3, hidden in mode 2.
+  // Subject: hidden in mode 3. Task selector: hidden in mode 2.
+  // Group toggle (Falls/ADLs): only meaningful in mode 2 (which task family to overlay).
   $("subjWrap").classList.toggle("hidden", m === "3");
   $("taskWrap").classList.toggle("hidden", m === "2");
-  if (m === "1") fill($("task"), TASKS, t => t.id, t => t.code + " — " + t.desc);
-  else if (m === "3") fill($("task"), TASKS.filter(t => t.type === "fall"),
-                             t => t.id, t => t.code + " — " + t.desc);
+  $("groupWrap").classList.toggle("hidden", m !== "2");
+  // Mode 1 and mode 3 both list all tasks (falls + ADLs); each overlay/view stays
+  // axis-consistent because only one task is shown at a time.
+  if (m === "1" || m === "3")
+    fill($("task"), TASKS, t => t.id,
+         t => t.code + " — " + t.desc + (t.type === "adl" ? "  [ADL]" : ""));
 }
 
 // ---- helpers ----
@@ -361,7 +377,8 @@ function palette(n) {
 const REF_LINES = (yref) => [0, 100].map(x => ({ type: "line", x0: x, x1: x, xref: "x",
   yref: yref, y0: 0, y1: 1, line: { color: REF, width: 1.2, dash: "dash" } }));
 
-function baseLayout(panels, sensorCfg, modeLabel) {
+function baseLayout(panels, sensorCfg, modeLabel, xTitle) {
+  xTitle = xTitle || X_FALL;
   const L = { template: "plotly_white", paper_bgcolor: "#fff", plot_bgcolor: "#fff",
     margin: { t: 54, r: 210, b: 54, l: 66 }, hovermode: "x unified",
     font: { family: "Helvetica, Arial, sans-serif", size: 12 },
@@ -374,19 +391,17 @@ function baseLayout(panels, sensorCfg, modeLabel) {
     mirror: false };
   if (panels === 2) {
     L.xaxis = Object.assign({}, axCommon, { anchor: "y", domain: [0, 1],
-      title: { text: "Phase (% of onset→impact)", font: AXIS_FONT }, matches: "x2" });
-    L.xaxis2 = Object.assign({}, axCommon, { anchor: "y2", domain: [0, 1], showticklabels: true });
+      title: { text: "", font: AXIS_FONT }, matches: "x2", showticklabels: false });
+    L.xaxis2 = Object.assign({}, axCommon, { anchor: "y2", domain: [0, 1], showticklabels: true,
+      title: { text: xTitle, font: AXIS_FONT } });
     L.yaxis = Object.assign({}, axCommon, { domain: [0.56, 1],
       title: { text: sensorCfg.mag_unit, font: AXIS_FONT }, range: sensorCfg.mag_range.slice(), fixedrange: false });
     L.yaxis2 = Object.assign({}, axCommon, { domain: [0, 0.44],
       title: { text: sensorCfg.raw_unit, font: AXIS_FONT }, range: sensorCfg.raw_range.slice() });
-    // x title only on lower panel; hide upper tick labels for a shared-axis look.
-    L.xaxis.showticklabels = false; L.xaxis.title = { text: "" };
-    L.xaxis2.title = { text: "Phase (% of onset→impact)", font: AXIS_FONT };
     L.shapes = REF_LINES("y domain").concat(REF_LINES("y2 domain"));
   } else {
     L.xaxis = Object.assign({}, axCommon, { anchor: "y", domain: [0, 1],
-      title: { text: "Phase (% of onset→impact)", font: AXIS_FONT } });
+      title: { text: xTitle, font: AXIS_FONT } });
     L.yaxis = Object.assign({}, axCommon, { domain: [0, 1],
       title: { text: sensorCfg.primary_unit, font: AXIS_FONT }, range: sensorCfg.primary_range.slice() });
     L.shapes = REF_LINES("y domain");
@@ -404,14 +419,11 @@ function renderMode1(sensorName) {
   const cfg = SENSORS[sensorName], subj = +$("subject").value, task = +$("task").value;
   const rec = (DATA[subj] || {})[task];
   const tinfo = TASK_BY_ID[task];
+  const isAdl = tinfo.type === "adl";
   const title = `Mode 1 &nbsp; SA${String(subj).padStart(2,"0")} &nbsp;&middot;&nbsp; `
     + `${tinfo.code} ${tinfo.desc} &nbsp;<span style="color:#888">(${tinfo.type})</span>`;
-  const L = baseLayout(2, cfg, title);
-  if (tinfo.type === "adl") { // clarify axis meaning for ADL
-    L.annotations = [{ x: 0.5, y: 1.045, xref: "paper", yref: "paper", showarrow: false,
-      font: { size: 11, color: "#c0392b" },
-      text: "ADL task: phase = 0% trial start → 100% trial end (no fall onset/impact labels)" }];
-  }
+  const L = baseLayout(2, cfg, title, isAdl ? X_ADL : X_FALL);
+  if (isAdl) L.annotations = [ADL_NOTE];  // clarify axis meaning for ADL
   const traces = [];
   if (!rec) {
     Plotly.react("chart", [], Object.assign(L, { title: { text: title + " &mdash; no data", x: .5 } }), {responsive:true});
@@ -443,14 +455,21 @@ function renderMode1(sensorName) {
 
 function renderOverlay(sensorName, mode) {
   const cfg = SENSORS[sensorName], primary = cfg.primary;
-  const L = baseLayout(1, cfg, "");
   const traces = []; let count = 0;
+  let isAdl, L;
   if (mode === "2") {
+    // One subject, overlay every task of the chosen family (falls OR ADLs) --
+    // kept single-family so the x-axis has one consistent meaning.
     const subj = +$("subject").value;
-    L.title.text = `Mode 2 &nbsp; SA${String(subj).padStart(2,"0")} &mdash; all fall tasks `
+    const group = $("group").value;                 // "fall" | "adl"
+    isAdl = group === "adl";
+    const ids = isAdl ? ADL_IDS : FALL_IDS;
+    const famLabel = isAdl ? "all ADL tasks" : "all fall tasks";
+    L = baseLayout(1, cfg, "", isAdl ? X_ADL : X_FALL);
+    L.title.text = `Mode 2 &nbsp; SA${String(subj).padStart(2,"0")} &mdash; ${famLabel} `
       + `(mean per task, ${sensorName})`;
-    const colors = palette(FALL_IDS.length);
-    FALL_IDS.forEach((tid, i) => {
+    const colors = palette(ids.length);
+    ids.forEach((tid, i) => {
       const rec = (DATA[subj] || {})[tid]; if (!rec || !rec[primary]) return;
       const t = TASK_BY_ID[tid];
       traces.push(line(PHASE, nanMean(rec[primary]), t.code, colors[i], 1.4,
@@ -458,7 +477,10 @@ function renderOverlay(sensorName, mode) {
       count++;
     });
   } else {
+    // One task (fall OR ADL), overlay every subject's mean.
     const task = +$("task").value, t = TASK_BY_ID[task];
+    isAdl = t.type === "adl";
+    L = baseLayout(1, cfg, "", isAdl ? X_ADL : X_FALL);
     L.title.text = `Mode 3 &nbsp; ${t.code} ${t.desc} &mdash; all subjects `
       + `(mean per subject, ${sensorName})`;
     const colors = palette(SUBJECTS.length);
@@ -469,6 +491,7 @@ function renderOverlay(sensorName, mode) {
       count++;
     });
   }
+  if (isAdl) L.annotations = [ADL_NOTE];
   Plotly.react("chart", traces, L, { responsive: true });
   return count;
 }
@@ -481,7 +504,7 @@ function render() {
 
 document.querySelectorAll('input[name=mode]').forEach(r =>
   r.addEventListener("change", () => { syncControls(); render(); }));
-["sensor", "subject", "task"].forEach(id => $(id).addEventListener("change", render));
+["sensor", "subject", "task", "group"].forEach(id => $(id).addEventListener("change", render));
 
 syncControls();
 render();
@@ -501,11 +524,13 @@ if __name__ == "__main__":
           f"({n_fall_tasks} fall, {n_adl_tasks} ADL)")
     print("Trials loaded per mode:")
     print(f"  Mode 1 (subject x task): {counts['mode1_trials']} total trials "
-          f"({counts['fall_trials']} fall + {counts['adl_trials']} ADL)")
-    print(f"  Mode 2 (subject, all falls): {counts['fall_trials']} fall trials "
-          f"-> {len(subjects)} subjects x {n_fall_tasks} fall tasks means")
-    print(f"  Mode 3 (fall, all subjects): same {counts['fall_trials']} fall trials, "
-          f"re-grouped as {n_fall_tasks} fall tasks x {len(subjects)} subjects means")
+          f"({counts['fall_trials']} fall + {counts['adl_trials']} ADL), any of {len(all_task_ids)} tasks")
+    print(f"  Mode 2 (subject, all tasks): Falls/ADLs toggle -> overlay "
+          f"{n_fall_tasks} fall OR {n_adl_tasks} ADL task means for one subject")
+    print(f"  Mode 3 (task, all subjects): any of {len(all_task_ids)} tasks "
+          f"(fall or ADL) overlaid across {len(subjects)} subjects")
+    print("  (Overlays stay single-family so the x-axis has one meaning: falls = "
+          "onset->impact, ADLs = trial start->end.)")
 
     if counts["fall_trials"] < 2300:
         print(f"  WARNING: expected ~2,300+ fall trials, got {counts['fall_trials']}.")
