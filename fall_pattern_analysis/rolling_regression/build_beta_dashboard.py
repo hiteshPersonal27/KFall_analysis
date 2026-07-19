@@ -37,7 +37,8 @@ import webbrowser
 
 import numpy as np
 
-PIPELINE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+PIPELINE_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                             "paper_threshold_validation")
 sys.path.insert(0, PIPELINE_DIR)
 from analyze_pattern import (  # noqa: E402
     discover_subjects, load_sensor_data, load_labels, get_fall_label_info,

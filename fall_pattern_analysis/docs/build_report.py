@@ -162,7 +162,7 @@ def build():
         "activities of daily living (ADLs, task codes D01-D21) and 15 types of simulated falls (task "
         "codes F01-F15, internally referenced as task IDs 20-34), each labeled with a fall onset frame "
         "and a fall impact frame derived from synchronized video review. This analysis used all "
-        "available recordings: 2,319 fall trials and 2,744 ADL trials across the 32 subjects.")
+        "available recordings: 2,319 fall trials and 2,717 ADL trials across the 32 subjects.")
 
     # 4. Methodology
     add_heading(doc, "4. Methodology", level=1)
@@ -225,12 +225,12 @@ def build():
     add_table(doc,
         ["Rule", "Sensitivity", "Specificity"],
         [
-            ["A (acceleration only)", "100.0%", "17.3%"],
-            ["B (acceleration + vertical velocity + tilt)", "95.6%", "35.8%"],
+            ["A (acceleration only)", "100.0%", "17.4%"],
+            ["B (acceleration + vertical velocity + tilt)", "95.6%", "34.9%"],
             ["Source publication's Threshold algorithm (reference)", "95.50%", "83.43%"],
         ])
     add_para(doc,
-        "Acceleration magnitude alone (Rule A) detects every fall trial but also triggers on 82.7% of "
+        "Acceleration magnitude alone (Rule A) detects every fall trial but also triggers on 82.6% of "
         "ADL trials, indicating negligible standalone discriminating power. Adding vertical velocity "
         "and tilt confirmation (Rule B) roughly doubles specificity for a marginal reduction in "
         "sensitivity, confirming that the combination of signals specified in the source publication is "
@@ -238,7 +238,7 @@ def build():
         "specificity is attributed to differences in evaluation protocol: this analysis records whether "
         "a rule fires at any point across an entire recording, a stricter test than a streaming, "
         "debounced real-time evaluation.")
-    add_figure(doc, "plots/sensitivity_specificity_comparison.png",
+    add_figure(doc, "paper_threshold_validation/plots/sensitivity_specificity_comparison.png",
                "Figure 1. Sensitivity and specificity, Rule A versus Rule B.")
 
     add_heading(doc, "5.2 Activity-of-Daily-Living False-Positive Analysis", level=2)
@@ -248,7 +248,7 @@ def build():
         "of false triggers for both rules, reflecting genuine physical similarity to fall dynamics "
         "rather than a deficiency in threshold calibration. Rule B substantially reduces false-positive "
         "rates on several slower activities while showing limited improvement on the most dynamic ones.")
-    add_figure(doc, "plots/adl_false_positive_by_task.png",
+    add_figure(doc, "paper_threshold_validation/plots/adl_false_positive_by_task.png",
                "Figure 2. False-positive rate by activity-of-daily-living task, Rule A versus Rule B.")
 
     add_heading(doc, "5.3 Fainting-While-Sitting Subset", level=2)
@@ -260,9 +260,9 @@ def build():
         "alternative for this fall subtype, consistent with the source publication's guidance. Rule C "
         "was not evaluated for specificity and its threshold was not independently tuned; this result "
         "should be read as confirming sensitivity only.")
-    add_figure(doc, "plots/heatmap_ruleB.png",
+    add_figure(doc, "paper_threshold_validation/plots/heatmap_ruleB.png",
                "Figure 3. Rule B detection rate by subject and fall task.")
-    add_figure(doc, "plots/fainting_subset_axis_comparison.png",
+    add_figure(doc, "paper_threshold_validation/plots/fainting_subset_axis_comparison.png",
                "Figure 4. Detection rate on the fainting-while-sitting subset, by rule.")
 
     add_heading(doc, "5.4 Phase-Aligned Signal Shape", level=2)
@@ -362,12 +362,14 @@ def build():
     add_table(doc,
         ["Path", "Contents"],
         [
-            ["analyze_pattern.py", "Rule A/B/C signal computation and sensitivity/specificity testing"],
-            ["pattern_results.csv", "Per-trial results underlying Section 5.1-5.3"],
-            ["generate_plots.py", "Baseline single-trial exploratory plots"],
+            ["paper_threshold_validation/analyze_pattern.py", "Rule A/B/C signal computation and sensitivity/specificity testing (also the shared pipeline other folders import)"],
+            ["paper_threshold_validation/pattern_results.csv", "Per-trial results underlying Section 5.1-5.3"],
             ["analysis_3panel/", "Phase-aligned visualization: acceleration, vertical velocity, tilt"],
             ["analysis_4panel/", "Phase-aligned visualization: adds gyroscope magnitude"],
-            ["docs/pattern_analysis.md", "Technical implementation walkthrough"],
+            ["signal_quality/", "Interactive Plotly dashboards (subject/task explorer)"],
+            ["rolling_regression/", "Causal Savitzky-Golay slope/curvature (beta1/beta2) signals"],
+            ["ensemble_trigger/", "Voting-ensemble detector (methodology/docs stage)"],
+            ["docs/pattern_analysis.md", "Technical implementation walkthrough (full project history)"],
             ["docs/paper.pdf", "Source publication"],
         ])
 

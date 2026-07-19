@@ -10,7 +10,6 @@ Two tools live here:
 |---|---|
 | `build_signal_dashboard.py` → `signal_dashboard.html` | **Interactive dashboard** with subject/task/mode selection (see below). The main tool. |
 | `build_signal_quality.py` → `signal_quality.html` | Simpler grand-average-only view (mean ± 1 std across all fall trials), no selectors. |
-| `export_mode3_screenshots.py` → `mode3_screenshots/` | Static PNG export of every Mode-3 plot (Task, all subjects), one image per task for each of the 3 sensors (108 PNGs), organized in `mode3_screenshots/<Sensor>/`. |
 
 ---
 

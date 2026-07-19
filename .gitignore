@@ -12,12 +12,9 @@ label_data/
 *.zip
 
 # All generated plots (every plots/ folder is produced by a build script --
-# legacy_baseline/plots, fall_pattern_analysis/plots, analysis_3panel/plots,
-# analysis_4panel/plots, rolling_regression/plots -- and any future ones).
+# paper_threshold_validation/plots, analysis_3panel/plots, analysis_4panel/plots,
+# rolling_regression/plots -- and any future ones).
 **/plots/
-
-# Static screenshot exports (regenerable via export_mode3_screenshots.py)
-fall_pattern_analysis/signal_quality/mode3_screenshots/
 
 # Large generated interactive HTML dashboards (regenerable from their build
 # scripts; each embeds every trial, tens of MB). Remove a line if you want that
@@ -25,12 +22,9 @@ fall_pattern_analysis/signal_quality/mode3_screenshots/
 fall_pattern_analysis/signal_quality/signal_dashboard.html
 fall_pattern_analysis/signal_quality/signal_quality.html
 fall_pattern_analysis/rolling_regression/beta_dashboard.html
-fall_pattern_analysis/signal_quality/export_mode3_screenshots.py
 
 # Jupyter
 .ipynb_checkpoints/
 
 # OS
 .DS_Store
-
-

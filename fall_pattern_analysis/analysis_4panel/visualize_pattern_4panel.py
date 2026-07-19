@@ -5,10 +5,10 @@ Same phase-aligned event-locked averaging method as the 3-panel version
 (analysis_3panel/visualize_pattern_3panel.py), extended with the one raw sensor
 modality that was missing there: the gyroscope. Tilt (from Euler angles) is a
 fused/integrated orientation estimate, not the same thing as raw angular velocity
--- the original generate_plots.py's "Rotational Whiplash" plot already showed gyro
-has a sharp spike during real falls vs. calm gait, so it's worth checking whether
-it behaves like the clean ACC_M/VV signals or like the noisy tilt signal when
-looked at the same phase-aligned way (rather than via a single ad hoc threshold).
+-- an earlier baseline exploration already showed gyro has a sharp spike during
+real falls vs. calm gait, so it's worth checking whether it behaves like the
+clean ACC_M/VV signals or like the noisy tilt signal when looked at the same
+phase-aligned way (rather than via a single ad hoc threshold).
 
 Run from the KFall project root: python3 analysis_4panel/visualize_pattern_4panel.py
 """
@@ -19,7 +19,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
-sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "paper_threshold_validation"))
 from analyze_pattern import (
     discover_subjects, load_sensor_data, load_labels, get_fall_label_info,
     compute_signals, lowpass_filter, FALL_TASK_IDS,
