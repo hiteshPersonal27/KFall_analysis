@@ -3,7 +3,12 @@
 Signal-processing investigation of whether the pre-impact fall signature in the
 [KFall dataset](https://doi.org/10.3389/fnagi.2021.692865) (Yu, Jang & Xiong, 2021)
 generalizes across subjects and fall types, and which sensor signals actually carry
-that pattern.
+that pattern. Two related but separate investigations live here:
+
+- `fall_pattern_analysis/` — the original signal-pattern investigation (below).
+- `paper_implementation/` — a from-scratch reproduction of the source paper's own
+  three benchmark algorithms (threshold, SVM, ConvLSTM), evaluated against the
+  paper's published Table 3 numbers. See `paper_implementation/README.md`.
 
 ## Setup
 
@@ -35,6 +40,15 @@ KFall/
 │       ├── KFall_Pattern_Analysis_Report.docx  # formal report
 │       ├── build_report.py                     # regenerates the .docx
 │       └── paper.pdf                           # source publication
+│
+├── paper_implementation/              # Reproduction of the source paper's own benchmark
+│   ├── data.py                        #   shared data layer (windowing, subject split)
+│   ├── threshold.py                   #   Algorithm A: threshold-based (paper's Fig. 6 rule)
+│   ├── svm_model.py                   #   Algorithm B: SVM on 40 hand-crafted features
+│   ├── convlstm_model.py              #   Algorithm C: ConvLSTM on raw sensor windows (GPU)
+│   ├── evaluate.py                    #   unified comparison vs. the paper's Table 3
+│   ├── results/                       #   per-trial predictions + comparison.md
+│   └── README.md                      #   run commands + full methodology notes
 │
 ├── sensor_data/, label_data/, *.zip   # raw dataset (gitignored)
 ├── requirements.txt

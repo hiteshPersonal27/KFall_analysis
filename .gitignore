@@ -28,3 +28,6 @@ fall_pattern_analysis/rolling_regression/beta_dashboard.html
 
 # OS
 .DS_Store
+
+# Claude Code local config
+.claude/
