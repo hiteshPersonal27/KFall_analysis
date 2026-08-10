@@ -31,3 +31,12 @@ fall_pattern_analysis/rolling_regression/beta_dashboard.html
 
 # Claude Code local config
 .claude/
+
+# Local implementation-plan working docs (personal scratch/planning notes,
+# not part of the project's tracked documentation -- see each area's own
+# docs/ folder, e.g. fall_pattern_analysis/docs/, for tracked docs).
+/docs/
+
+# Disk-cached precomputed tensors (large, regenerable from data.py -- every
+# experiments/*/cache/ folder is produced by a build script).
+experiments/*/cache/
