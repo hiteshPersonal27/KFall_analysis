@@ -1,5 +1,5 @@
 """
-Evaluation for the 1D-CNN + Transformer experiment (see
+Evaluation for the ViT-style Transformer experiment (see
 ../../docs/CNN_Transformer_Implementation_Plan.md).
 
 Per-window prediction -> per-trial aggregation using the SAME consecutive-
@@ -11,7 +11,7 @@ whether this reproduction is in the right range, per the plan's success
 criteria).
 
 Run (after train.py has produced a checkpoint):
-  python3 experiments/cnn_transformer/evaluate.py
+  python3 experiments/vit_prefallkd/evaluate.py
 """
 
 import os
@@ -144,7 +144,7 @@ if __name__ == "__main__":
     trial_results.to_csv(RESULTS_CSV, index=False)
     print(f"\nSaved {len(trial_results)} per-trial predictions to {RESULTS_CSV}")
 
-    xf_summary = summarize(trial_results, "1D-CNN + Transformer (this repro)")
+    xf_summary = summarize(trial_results, "ViT-style Transformer (this repro)")
     base_summary = baseline_summary()
 
     # Derive precision/accuracy/F1/specificity for the PreFallKD-style comparison row.
@@ -154,7 +154,7 @@ if __name__ == "__main__":
     f1 = 2 * precision * recall / (precision + recall) if (precision + recall) else float("nan")
     accuracy = (tp + tn) / (tp + fn + tn + fp)
 
-    lines = ["# 1D-CNN + Transformer vs. Baseline ConvLSTM vs. PreFallKD's published numbers\n"]
+    lines = ["# ViT-style Transformer vs. Baseline ConvLSTM vs. PreFallKD's published numbers\n"]
     lines += [
         "| Model | Accuracy | Precision | Recall (Sens.) | Specificity | F1 | Lead time (ms) |",
         "|---|---|---|---|---|---|---|",

@@ -1,5 +1,5 @@
 """
-ViT-style transformer for the 1D-CNN + Transformer experiment (see
+ViT-style transformer model (see
 ../../docs/CNN_Transformer_Implementation_Plan.md). Follows PreFallKD's
 "tiny" transformer sizing exactly, as a faithful starting point: 3 layers,
 3 attention heads, hidden size 64, MLP size 256, dropout 0.2.
@@ -10,7 +10,7 @@ Structure (Section 2a of the plan -- transformer only, no distillation yet):
   MLP, stacked) -> classify from the CLS token's final representation.
 
 Run standalone to print the shape progression and parameter count:
-  python3 experiments/cnn_transformer/model.py
+  python3 experiments/vit_prefallkd/model.py
 """
 
 import torch

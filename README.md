@@ -95,6 +95,42 @@ python3 fall_pattern_analysis/rolling_regression/build_beta_dashboard.py
 Full detail, methodology, and figures: see `fall_pattern_analysis/docs/pattern_analysis.md`
 (technical) or `fall_pattern_analysis/docs/KFall_Pattern_Analysis_Report.docx` (formal report).
 
+## Model comparison (post validation/bug-fix pass)
+
+A deep validation pass across `paper_implementation/` and every `experiments/`
+subproject found and fixed three real bugs: a window-labeling bug that
+silently dropped fall trials with a short onset-to-impact duration from every
+window-based evaluation; a transformer classification-head bug (two
+architectures copied the LSTM baseline's "last timestep" convention despite
+using non-causal self-attention, fixed to global average pooling); and an SVM
+cross-validation subject-leakage bug plus an incorrectly-computed zero-crossing-rate
+feature. A separate, dedicated leakage sweep checked every experiment for
+normalization-stat leakage, subject overlap between splits, and other data
+hygiene issues — everything else in the repo was clean. All models below were
+retrained/re-evaluated after the fixes, on the identical corrected test set
+(439 fall trials, 522 ADL trials):
+
+| Model | TP | FN | TN | FP | Sensitivity | Specificity | Lead time (ms) |
+|---|--:|--:|--:|--:|--:|--:|--:|
+| Threshold (paper repro) | 384 | 55 | 436 | 86 | 87.47% | 83.52% | 347 ± 135 |
+| SVM (paper repro) | 367 | 72 | 402 | 120 | 83.60% | 77.01% | 226 ± 123 |
+| **ConvLSTM (paper repro)** | **415** | **24** | **489** | **33** | **94.53%** | **93.68%** | 224 ± 136 |
+| CWT + 2D-CNN (`experiments/cwt_lstm`) | 368 | 71 | 385 | 137 | 83.83% | 73.75% | 228 ± 126 |
+| ViT / PreFallKD-style repro (`experiments/vit_prefallkd`) | 415 | 24 | 457 | 65 | 94.53% | 87.55% | 225 ± 136 |
+| Conv+Transformer, pooled/6-token (`experiments/conv_transformer`) | 409 | 30 | 423 | 99 | 93.17% | 81.03% | 227 ± 136 |
+| Conv+Transformer, no-pool/50-token (`experiments/conv_transformer_nopool`) | 415 | 24 | 455 | 67 | 94.53% | 87.16% | 224 ± 137 |
+| GAF, per-window normalization (`experiments/gaf_mtf`) | 354 | 85 | 48 | 474 | 80.64% | 9.20% | 219 ± 118 |
+| GAF, global normalization (`experiments/gaf_global`) | 415 | 24 | 347 | 175 | 94.53% | 66.48% | 223 ± 131 |
+
+**The ConvLSTM baseline from the original paper reproduction remains the
+best-performing model overall** — no newer architecture tried in this repo
+(attention-based or image-encoding) beat its specificity. Four independent
+architectures (ConvLSTM, ViT/PreFallKD, Conv+Transformer no-pool, GAF global
+norm) all converge on the exact same 24 false negatives, strong evidence
+these particular fall trials are genuinely hard cases (very short
+onset-to-impact duration) rather than a modeling artifact of any one
+approach.
+
 ## Reference
 
 Yu, X., Jang, J., & Xiong, S. (2021). A Large-Scale Open Motion Dataset (KFall) and

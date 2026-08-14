@@ -1,5 +1,5 @@
 """
-Training script for the 1D-CNN + Transformer experiment (see
+Training script for the ViT-style Transformer experiment (see
 ../../docs/CNN_Transformer_Implementation_Plan.md).
 
 Follows PreFallKD's own setup: AdamW optimizer (not plain Adam), cross-
@@ -17,7 +17,7 @@ or memory-safety concern the way experiments/cwt_lstm/ needed (raw (50, 9)
 window storage is identical in cost to the baseline ConvLSTM's, already
 proven safe at full uncapped scale).
 
-Run:  python3 experiments/cnn_transformer/train.py
+Run:  python3 experiments/vit_prefallkd/train.py
 """
 
 import os

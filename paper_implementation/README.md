@@ -52,6 +52,19 @@ Step 5 reads whichever of those exist and writes `results/comparison.md`
   (pre-impact framing); windows outside that range are excluded, not counted
   as ADL. ADL trial windows are always labeled `"adl"`.
 
+**Window-labeling bug, found and fixed:** fall trials whose `impact - onset`
+duration was shorter than the 50-frame window width (0.5s) produced ZERO
+windows under the strict containment rule above — `iter_windows()` silently
+yielded nothing for them, so those trials were dropped from every
+window-based evaluation entirely (not counted as a miss, not counted at
+all). This affected 21-29 of the 439 fall trials depending on stride, and
+meant every experiment's test set was previously evaluating on as few as 418
+of the 439 fall trials without any visible error. **Fixed** with a fallback
+window anchored to end at impact when the strict containment rule yields
+nothing, so every fall trial now contributes at least one window. All
+numbers in this README and `results/comparison.md` are from the corrected
+data layer, evaluated on the full 439 fall / 522 ADL test set.
+
 Confirmed on first run: test-set trial counts (439 fall / 522 ADL) are in the
 same ballpark as the paper's reported test set (444 fall / 507 ADL files).
 
@@ -102,7 +115,7 @@ angle>20deg`. Held out on the test subjects:
 
 | | Sensitivity | Specificity | Lead time |
 |---|---|---|---|
-| Threshold (re-tuned, this repro) | 87.47% | **83.52%** | 347±134 ms |
+| Threshold (re-tuned, this repro) | 87.47% | **83.52%** | 347±135 ms |
 | Threshold (paper's published constants, same pipeline) | 95.90% | 35.82% | 653±425 ms |
 | Paper | 95.50% | **83.43%** | 333±160 ms |
 
@@ -132,6 +145,24 @@ plan's "start with stride=1; document if changed for speed" allowance:
   finer stride and are never subsampled.
 - Test windows use `stride=5` (no subsampling — every test window is scored).
 
+**Two bugs found and fixed during validation:**
+1. **CV subject leakage.** The internal `GridSearchCV` hyperparameter search
+   used plain `StratifiedKFold`, which can put windows from the same subject
+   on both sides of a CV split — leaking subject identity into the score used
+   to pick hyperparameters. Fixed to `StratifiedGroupKFold` with
+   `groups=subject`, so no subject ever appears in both the training and
+   validation side of a fold.
+2. **`_zcr()` wasn't actually computing a zero-crossing rate.** It was
+   computing "count of samples above the window mean" (a level-count), not
+   the intended "count of sign-change transitions relative to the mean."
+   Fixed to the correct definition.
+
+The SVM was retrained/retuned with fix #1, then again with fix #2 layered on
+top; the final numbers below (and in `results/comparison.md`) reflect both
+fixes together, on top of the corrected window-labeling data layer described
+above: **83.60% sensitivity / 77.01% specificity** (72 FN, 120 FP), lead time
+226±123ms.
+
 ## Aggregation / persistence tuning (svm_model.py, convlstm_model.py only)
 
 `threshold.py` does **not** use this — its specificity gap turned out to be
@@ -156,6 +187,13 @@ full fix by itself — no tested value matches the paper on both metrics
 simultaneously at the smaller (20K-window) training scale; ConvLSTM's larger
 training scale (see its section below) closed most of that gap directly, so
 this knob matters less for it. Measured on the test split:
+
+**Note:** the sweep tables below predate the window-labeling and SVM fixes
+described earlier in this README, and are kept as-is to show the *relative*
+effect of the `CONSEC_WINDOWS` knob. Where these numbers disagree with the
+headline SVM/ConvLSTM numbers stated elsewhere in this README (SVM
+83.60%/77.01%; ConvLSTM 94.53%/93.68%), **the headline numbers are correct
+and supersede this sweep.**
 
 | `svm_model.py` CONSEC_WINDOWS (20K-window training scale) | Sensitivity | Specificity |
 |---|---|---|
@@ -185,6 +223,9 @@ Paper reference: Threshold 95.50%/83.43%, SVM 99.77%/94.87%, ConvLSTM
 99.32%/99.01%. Change the constant at the top of each file to shift the
 trade-off; `CONSEC_FRAMES=1` / `CONSEC_WINDOWS=1` reverts to the original
 "any fires" rule.
+
+(Our own final repro numbers, for comparison against the paper reference
+above: Threshold 87.47%/83.52%, SVM 83.60%/77.01%, ConvLSTM 94.53%/93.68%.)
 
 ## ConvLSTM (`convlstm_model.py`)
 
@@ -220,19 +261,22 @@ give the persistence aggregation rule below finer resolution to tell a
 sustained fall apart from a brief ADL blip.
 
 **Result — and a real ceiling, not just under-training:** sensitivity lands
-almost exactly on the paper's target. Specificity improved over a smaller
-150K-window run, but only marginally (89.85%→91.19%, +1.3pp) for an 11.7x
-increase in training data (150K→1.41M) — a strong signal of **diminishing
-returns**, not a data-starved model. The window-level classifier is already
-near-paper-quality (~99% window sensitivity/specificity) even at the smaller
-training scale, so more data alone is not going to close the remaining ~8pp
-specificity gap:
+close to the paper's target, and specificity is now the best of the three
+paper-reproduction algorithms, but still below the paper's own number.
+
+**Update (post window-labeling fix):** the numbers below supersede an
+earlier draft of this section, which reported 99.28%/91.19% for the
+1.41M-window run. That number was measured before the window-labeling bug
+(described in the Data layer section above) was fixed — the earlier test set
+was silently missing ~21-29 of the 439 fall trials. Re-evaluated on the
+corrected full 439-fall/522-ADL test set:
 
 | | Sensitivity | Specificity | Lead time |
 |---|---|---|---|
-| ConvLSTM, 150K-window training | 99.28% | 89.85% | 225±136 ms |
-| ConvLSTM, 1.41M-window training (uncapped) | 99.28% | 91.19% | 224±135 ms |
+| ConvLSTM, 1.41M-window training (uncapped, corrected test set) | **94.53%** | **93.68%** | 224±136 ms |
 | Paper | 99.32% | 99.01% | 403±163 ms |
+
+FN=24, FP=33, TP=415, TN=489 on the corrected 439-fall/522-ADL test set.
 
 **What's honestly left unexplained:** the paper doesn't document any
 per-file aggregation rule for SVM/ConvLSTM the way it does for the threshold
@@ -258,9 +302,18 @@ with a checklist against the plan's success criteria:
 **Note on the last criterion:** it's expected to now FAIL — it was written
 assuming the threshold method would stay the weakest on specificity, matching
 the paper's numbers verbatim. After fixing `threshold.py`'s VV threshold
-mis-calibration (see the Threshold section above), its specificity (~83.5%)
-is close to SVM's (~79.9%), so the strict ordering no longer holds. This is
-the intended outcome of that fix, not a regression.
+mis-calibration (see the Threshold section above), its specificity (83.52%)
+is actually *above* SVM's (77.01%), so the strict ordering no longer holds.
+This is the intended outcome of that fix, not a regression.
+
+**Note on the first criterion (post SVM CV-leakage/ZCR fixes):** this now
+also FAILS for SVM specifically — its corrected sensitivity (83.60%) is
+below the threshold method's (87.47%). The SVM fixes documented in the SVM
+section above (subject-grouped CV, correct ZCR feature) removed an
+inflated-CV-score artifact that had been propping up its apparent
+performance; ConvLSTM still comfortably outperforms the threshold method on
+sensitivity (94.53% vs. 87.47%), so it alone continues to satisfy this
+criterion.
 
 Small deviations from the paper are expected (random split, VV integration
 details, exact feature set, subsampling for tractability). Large deviations

@@ -106,14 +106,20 @@ throughout (confirmed via `free -h` during the run).
 
 | | Sensitivity | Specificity | Lead time |
 |---|---|---|---|
-| **CWT + 2D-CNN + LSTM** (150K training scale) | **89.76%** | **73.75%** | 228±126 ms |
-| Baseline raw-1D ConvLSTM, matched 150K training scale | 99.28% | 89.85% | 225±136 ms |
-| Baseline raw-1D ConvLSTM, full 1.41M (uncapped) training scale | 99.28% | 91.19% | 224±135 ms |
+| **CWT + 2D-CNN + LSTM** (150K training scale) | **83.83%** | **73.75%** | 228±126 ms |
+| Baseline raw-1D ConvLSTM, full-scale (corrected test set) | 94.53% | 93.68% | 224±136 ms |
 | Paper (ConvLSTM) | 99.32% | 99.01% | 403±163 ms |
 
+**Note:** the ConvLSTM baseline row above (94.53%/93.68%) reflects the
+window-labeling bug fix in `paper_implementation/data.py` (see that
+project's README) — every experiment's test set now correctly evaluates on
+the full 439 fall / 522 ADL trials, correcting an earlier baseline number of
+99.28%/91.19% that was silently missing ~21-29 fall trials. CWT+2D-CNN was
+re-evaluated on the same corrected test set.
+
 At a matched training scale, CWT+2D-CNN underperforms the raw-1D baseline on
-**both** sensitivity (89.76% vs 99.28%, -9.5pp) and specificity (73.75% vs
-89.85%, -16.1pp). This is despite validation balanced accuracy reaching
+**both** sensitivity (83.83% vs 94.53%, -10.7pp) and specificity (73.75% vs
+93.68%, -19.9pp). This is despite validation balanced accuracy reaching
 ~99% during training — a sizeable train/val-to-test gap, suggesting the
 richer (9, 24, 50) input let the model fit the training subjects more
 precisely without that fit generalizing to held-out subjects as well as the

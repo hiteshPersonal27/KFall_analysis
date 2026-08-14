@@ -26,7 +26,7 @@ import numpy as np
 import pandas as pd
 from sklearn.svm import SVC
 from sklearn.preprocessing import StandardScaler
-from sklearn.model_selection import GridSearchCV, StratifiedKFold
+from sklearn.model_selection import GridSearchCV, StratifiedGroupKFold
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, SCRIPT_DIR)
@@ -55,8 +55,15 @@ SUBSAMPLE_SEED = 42
 # Feature extraction
 # ----------------------------------------------------------------------------- #
 def _zcr(x, mean):
-    """Zero-crossing rate around the window mean: count of samples above it."""
-    return int(np.sum(x > mean))
+    """Zero-crossing rate around the window mean: count of sign changes in
+    (x - mean), i.e. how many times the signal crosses its own mean level.
+    (Previously this counted samples above the mean, which is a level-count,
+    not a crossing-rate -- fixed after a validation pass flagged the
+    mismatch with the standard ZCR definition.)"""
+    centered = x - mean
+    signs = np.sign(centered)
+    signs[signs == 0] = 1
+    return int(np.sum(np.diff(signs) != 0))
 
 
 def _absdiff(x, mean):
@@ -241,14 +248,23 @@ if __name__ == "__main__":
     X_train_s = scaler.transform(X_train)
     X_test_s = scaler.transform(X_test)
 
-    print("\nTuning SVM (RBF kernel) via 3-fold CV within training subjects...")
+    print("\nTuning SVM (RBF kernel) via 3-fold GROUP CV within training subjects...")
+    # StratifiedGroupKFold (not plain StratifiedKFold): windows from the same
+    # subject/trial are highly correlated, so a plain window-level split can
+    # put windows from the SAME subject in both the CV-train and CV-validation
+    # fold simultaneously -- an optimistic leakage that can bias hyperparameter
+    # selection toward values that look good on subject-specific patterns
+    # rather than genuinely generalizing. Grouping by subject (meta_train's
+    # "subject" column) keeps each subject entirely within one fold, matching
+    # the subject-disjoint discipline used for the outer train/test split.
     param_grid = {"C": [1, 10, 100], "gamma": ["scale", 0.01, 0.1]}
+    groups_train = meta_train["subject"].values
     grid = GridSearchCV(
         SVC(kernel="rbf", class_weight="balanced"),
-        param_grid, cv=StratifiedKFold(n_splits=3, shuffle=True, random_state=42),
+        param_grid, cv=StratifiedGroupKFold(n_splits=3, shuffle=True, random_state=42),
         scoring="balanced_accuracy", n_jobs=-1,
     )
-    grid.fit(X_train_s, y_train)
+    grid.fit(X_train_s, y_train, groups=groups_train)
     print(f"Best params: {grid.best_params_}  (CV balanced accuracy: {grid.best_score_:.3f})")
 
     clf = grid.best_estimator_

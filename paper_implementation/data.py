@@ -152,20 +152,74 @@ def iter_windows(trial, width=WINDOW_WIDTH, stride=WINDOW_STRIDE):
     Slide a width-frame window across a trial.
 
     Fall trials: a window is labeled "fall" only if it lies fully within
-    [onset, impact] (the paper's pre-impact framing); windows before onset or
-    after impact are skipped entirely (not "fall", not "adl" -- excluded).
-    ADL trials: every window is labeled "adl".
+    [onset, impact] (the paper's pre-impact framing) -- SAME rule as
+    originally, for trials where that's possible. Windows before onset or
+    after impact are excluded (not "fall", not "adl").
+
+    EDGE CASES, surgically handled: two distinct ways the strict rule can
+    yield ZERO windows for a fall trial instead of one:
+      (a) impact-onset < width (< 500ms at 100Hz, width=50) -- no window
+          CAN be fully contained, period. 21/439 fall trials (4.8%) hit this.
+      (b) impact-onset >= width, but the (few) valid start positions don't
+          happen to land on the stride grid -- e.g. duration=50 has exactly
+          ONE valid start (start=onset), and if `onset` isn't a multiple of
+          the test stride, a coarse stride (e.g. 5) skips it entirely even
+          though width-wise a window fits. Found 8 additional trials hitting
+          this at stride=5 (durations 50-52) that (a) alone didn't catch --
+          discovered by re-checking actual yielded counts after the first
+          fix, not assumed away.
+    Both silently DROP the trial from every downstream window-based
+    evaluation (aggregate_to_trials groupby) -- not counted as a missed
+    detection, not counted at all -- inflating every reported sensitivity
+    number, asymmetrically (only fall trials are affected; ADL trials have
+    no such containment rule).
+
+    Fix: run the strict rule first; if and ONLY if it yields zero windows,
+    fall back to a single window anchored to end exactly at impact
+    (capturing the most information-rich part -- everything up to and
+    including impact). This is deliberately NOT a blanket loosening of the
+    containment rule for every trial (an earlier, overly broad version of
+    this fix relaxed "start>=onset" to "end>onset" for ALL trials, which
+    roughly DOUBLED the window count even for normal, long-margin trials --
+    e.g. one measured case went from 54 windows to 103 for the same trial --
+    systematically adding many pre-onset-start windows dominated by
+    near-impact motion, inflating sensitivity far beyond what the edge-case
+    fix alone justifies). Checking the actual yielded count (not just
+    comparing duration to width) catches both edge cases (a) and (b)
+    uniformly, regardless of stride. Confirmed: min(impact) across all 2319
+    fall trials in the dataset is 53 frames, so the fallback window's
+    start = impact-width is never negative.
+
+    ADL trials: every window is labeled "adl" (unaffected either way).
     """
     n = trial.n_frames
     if n < width:
         return
-    for start in range(0, n - width + 1, stride):
-        end = start + width
-        if trial.is_fall:
+
+    if trial.is_fall:
+        # Strict full-containment rule, exactly as originally implemented --
+        # buffered (not yielded directly) so we can detect the zero-window
+        # edge cases and fall back, regardless of WHY they're zero.
+        strict_windows = []
+        for start in range(0, n - width + 1, stride):
+            end = start + width
             if start >= trial.onset and end <= trial.impact:
+                strict_windows.append((start, end))
+
+        if strict_windows:
+            for start, end in strict_windows:
                 yield Window(trial, start, end, "fall")
-            # windows outside [onset, impact] are excluded, not labeled ADL
         else:
+            # Edge case: strict rule found nothing (too-short duration, or a
+            # coarse stride skipping the only valid position(s)). Single
+            # fallback window anchored to end exactly at impact.
+            end = trial.impact
+            start = end - width
+            if start >= 0:
+                yield Window(trial, start, end, "fall")
+    else:
+        for start in range(0, n - width + 1, stride):
+            end = start + width
             yield Window(trial, start, end, "adl")
 
 

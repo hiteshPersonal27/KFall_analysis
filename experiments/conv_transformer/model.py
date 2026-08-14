@@ -1,13 +1,16 @@
 """
-CNN + Transformer -- a MINIMAL ablation of the baseline ConvLSTM
+CNN + Transformer -- an ablation of the baseline ConvLSTM
 (paper_implementation/convlstm_model.py): the exact same 1D conv feature
-extractor, with ONLY the LSTM stage swapped for a Transformer encoder.
-Everything else (conv filters/kernel size, dropout, classification head
-convention, training recipe) is kept identical on purpose, so any
-sensitivity/specificity difference from the baseline isolates the
-LSTM-vs-attention question cleanly -- unlike experiments/cnn_transformer/,
-which reproduces PreFallKD's own (very different) ViT-style patch
-tokenization architecture with no conv layers at all.
+extractor, with the LSTM stage swapped for a Transformer encoder.
+Conv filters/kernel size, dropout, and training recipe are kept identical
+on purpose, so any sensitivity/specificity difference from the baseline
+isolates the LSTM-vs-attention question as cleanly as possible -- unlike
+experiments/vit_prefallkd/, which reproduces PreFallKD's own (very
+different) ViT-style patch tokenization architecture with no conv layers
+at all.
+
+Classification head: global average pooling over the sequence axis (NOT
+the LSTM's "last timestep" convention -- see the fix note below).
 
 Run standalone to print the shape progression and parameter count:
   python3 experiments/conv_transformer/model.py
@@ -71,6 +74,17 @@ class ConvTransformer(nn.Module):
         )
         self.encoder = nn.TransformerEncoder(encoder_layer, num_layers=transformer_layers)
         self.fc = nn.Linear(c3, n_classes)
+        # No causal mask is applied to self.encoder -- every position attends
+        # to every other position equally (bidirectional). An earlier version
+        # of this model copied the LSTM baseline's out[:, -1, :] ("last
+        # timestep") convention, but that convention only means "cumulative
+        # summary" for an LSTM's inherently causal, sequential processing --
+        # for a non-causal-masked transformer, the last position carries no
+        # such special meaning (attention gives every position equal access
+        # to the whole sequence). Global average pooling (see forward()) is
+        # the principled choice instead -- doesn't add new learnable
+        # parameters/tokens (a CLS token would), keeping this a minimal
+        # ablation of the recurrent-vs-attention question specifically.
 
     def forward(self, x):
         # x: (B, width, 9) -> conv wants (B, 9, width) -- identical to the baseline.
@@ -79,8 +93,8 @@ class ConvTransformer(nn.Module):
         x = x.transpose(1, 2)            # (B, width', c3)
         x = x + self.pos_embed
         out = self.encoder(x)             # (B, width', c3)
-        last = out[:, -1, :]               # same "last timestep" convention as the LSTM baseline
-        return self.fc(last)               # logits; softmax applied via CrossEntropyLoss
+        pooled = out.mean(dim=1)           # global average pool over the sequence axis
+        return self.fc(pooled)             # logits; softmax applied via CrossEntropyLoss
 
 
 if __name__ == "__main__":

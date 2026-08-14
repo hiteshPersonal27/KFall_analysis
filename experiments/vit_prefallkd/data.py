@@ -1,5 +1,5 @@
 """
-Data layer for the 1D-CNN + Transformer experiment (see
+Data layer for the ViT-style Transformer experiment (see
 ../../docs/CNN_Transformer_Implementation_Plan.md). Follows PreFallKD (Chi,
 Liu, Hsieh, Tsao & Chan, ICASSP 2023) -- the only published lightweight-
 transformer approach validated on KFall itself.

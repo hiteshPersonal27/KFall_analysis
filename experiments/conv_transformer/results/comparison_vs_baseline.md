@@ -2,9 +2,9 @@
 
 | | Sensitivity | Specificity | Lead time (ms) |
 |---|---|---|---|
-| CNN + Transformer | 99.28% | 80.08% | 225+/-137 |
-| Baseline ConvLSTM | 99.28% | 91.19% | 224+/-135 |
+| CNN + Transformer | 93.17% | 81.03% | 227+/-136 |
+| Baseline ConvLSTM | 94.53% | 93.68% | 224+/-136 |
 
-Specificity delta: -11.1pp.
+Specificity delta: -12.6pp.
 
 **Result: attention performed WORSE than the LSTM on this direct swap.**
