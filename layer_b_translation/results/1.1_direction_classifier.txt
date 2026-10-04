@@ -1,0 +1,21 @@
+1.1 -- Direction Classifier (REDESIGNED, Step 2 -- signed roll/pitch
+at peak-GYR_M frame, replacing the old ACC_M bump/dip heuristic)
+===================================================================
+
+[TRAIN (used to freeze ROLL_DOMINANCE_RATIO=1.9)] subjects=26 trials=1880
+  Accuracy: 1655/1880 (88.0%)
+  Predicted distribution: {'forward': 838, 'backward': 442, 'lateral': 600}
+  Per-true-direction accuracy:
+    forward: 814/995 (81.8%)
+    backward: 363/378 (96.0%)
+    lateral: 478/507 (94.3%)
+
+[TEST -- HELD-OUT, evaluated once] subjects=6 trials=439
+  Accuracy: 398/439 (90.7%)
+  Predicted distribution: {'forward': 200, 'backward': 94, 'lateral': 145}
+  Per-true-direction accuracy:
+    forward: 199/233 (85.4%)
+    backward: 81/87 (93.1%)
+    lateral: 118/119 (99.2%)
+
+Gate: held-out accuracy >= 80%. RESULT: 90.7% -- CLEARED

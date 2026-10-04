@@ -1,0 +1,14 @@
+1.4 -- Capture Point / XCoM (Step 4 -- direction-aware BoS half-width
+0.20m forward / 0.12m backward,lateral, illustrative not fit; + causal
+first-crossing re-evaluation, the honest streaming-equivalent lead time)
+===================================================================================
+
+[TRAIN] subjects=26 trials=1880
+  deficit (m): mean=1.1481 std=0.3235 max=3.5115
+  causal first-crossing lead time (ms, streaming-equivalent, n=1880): mean=547.4 median=540.0 min=210.0 max=1250.0
+  never crosses BoS within window: 0/1880
+
+[TEST] subjects=6 trials=439
+  deficit (m): mean=1.1264 std=0.2946 max=1.9127
+  causal first-crossing lead time (ms, streaming-equivalent, n=439): mean=531.8 median=530.0 min=160.0 max=1080.0
+  never crosses BoS within window: 0/439

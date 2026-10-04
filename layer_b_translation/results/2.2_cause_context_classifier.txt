@@ -1,0 +1,16 @@
+2.2 -- Cause/Context Classifier (Layer A, unchanged this fix pass)
+===================================================================================
+
+[TRAIN] subjects=26 trials=1880
+  Overall accuracy: 1662/1880 (88.4%)
+    sit_stand: 495/634 (78.1%)
+    static_fainting: 351/373 (94.1%)
+    dynamic_fainting: 235/248 (94.8%)
+    trip_slip: 581/625 (93.0%)
+
+[TEST -- HELD-OUT] subjects=6 trials=439
+  Overall accuracy: 396/439 (90.2%)
+    sit_stand: 113/148 (76.4%)
+    static_fainting: 85/88 (96.6%)
+    dynamic_fainting: 57/57 (100.0%)
+    trip_slip: 141/146 (96.6%)

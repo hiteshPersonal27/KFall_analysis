@@ -1,0 +1,25 @@
+1.5 -- Torque Magnitude per Joint (REPLACED, Step 5 -- impulse-momentum
+kinematic formula F=2*mass*deficit/effective_T^2, ACTUATOR_LATENCY_S=0.10s
+frozen via a generic toy sanity check BEFORE this dataset run, not fit to it)
+===================================================================================
+
+[TRAIN] subjects=26 trials=1880
+  required (unclamped) total torque (Nm): mean=1279.2 median=601.4 max=1106110.9
+  trials exceeding 40.0Nm ceiling: 1880/1880 (100.0%)
+
+[TEST] subjects=6 trials=439
+  required (unclamped) total torque (Nm): mean=646.7 median=592.8 max=4499.6
+  trials exceeding 40.0Nm ceiling: 439/439 (100.0%)
+
+FINDING (reported as-is, not adjusted to change this number -- see torque_magnitude.py
+docstring for why iterating this after seeing the saturation rate would reintroduce
+leakage): given this dataset's deficits and the frozen constants, most trials require
+more torque than the 40Nm ceiling allows -- a consequence of the crude single-IMU CoM
+proxy producing large deficits, not a claim about real biomechanical torque needs.
+
+NOTE ON THE 1,106,110.9 Nm max (TRAIN): a single trial with reaction_time_ms ~80ms
+(near the MIN_EFFECTIVE_TIME_S floor after subtracting ACTUATOR_LATENCY_S) -- the
+kinematic formula's 1/effective_T^2 term blows up as available time approaches zero,
+which is the expected (if extreme) behavior of this formula for a genuinely
+near-zero-reaction-time fall, not a computation bug. Median (601.4 Nm) is a more
+representative summary than mean for this heavy-tailed distribution.

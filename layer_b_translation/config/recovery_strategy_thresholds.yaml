@@ -1,0 +1,21 @@
+# Recovery strategy lookup table (Layer B, item 1.7).
+# Editable without touching recovery_strategy.py logic. Not literature-validated
+# yet -- placeholder thresholds pending physician/PT input (same status as the
+# Layer D safety ceiling).
+
+# REMOVED (was xcom_deficit_high_m: 1.54) -- see docs/LayerB_Implementation_Plan.md
+# fix plan, Step 5. That threshold was an independently-fit percentile of this
+# dataset's own deficit distribution (leakage: calibrated and evaluated on the
+# same data). The "step vs. torque-only" decision is no longer a config value at
+# all -- it's now derived in recovery_strategy.py directly from whether the
+# UNCLAMPED required torque (phase1_formulas/torque_magnitude.py) would exceed
+# the safety ceiling (torque_profile.py's PLACEHOLDER_SAFETY_CEILING_NM), so 1.5
+# and 1.7 are grounded in the same physical constraint instead of two
+# independently-calibrated numbers.
+
+# Strategy is picked by fall direction whenever torque-only correction is
+# sufficient (i.e. required torque <= safety ceiling):
+direction_strategy:
+  forward: hip_torque
+  backward: ankle_torque
+  lateral: ankle_torque

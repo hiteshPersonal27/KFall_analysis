@@ -1,0 +1,12 @@
+1.7 -- Recovery Strategy Selection (REDESIGNED, Step 5 -- "step" decision now
+derived from required_torque_total_nm > safety_ceiling, not an independently-fit
+deficit percentile; config's xcom_deficit_high_m threshold removed entirely)
+===================================================================================
+
+[TRAIN] subjects=26 trials=1880
+  Distribution: {'stepping': 1880}
+    stepping: 1880 (100.0%)
+
+[TEST] subjects=6 trials=439
+  Distribution: {'stepping': 439}
+    stepping: 439 (100.0%)

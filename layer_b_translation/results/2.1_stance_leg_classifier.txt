@@ -1,0 +1,9 @@
+2.1 -- Stance-Leg Classifier (unchanged this fix pass -- UNVALIDATED, no ground
+truth in KFall, see phase2_models/stance_leg_classifier.py docstring)
+===================================================================================
+
+[TRAIN] subjects=26 trials=1880
+  Distribution: {'right': 607, 'unknown': 1023, 'left': 250}
+
+[TEST] subjects=6 trials=439
+  Distribution: {'right': 135, 'unknown': 235, 'left': 69}

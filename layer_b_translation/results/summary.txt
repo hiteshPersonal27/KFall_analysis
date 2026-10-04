@@ -1,0 +1,23 @@
+Layer B Phase 1 + Phase 2 -- Post-Fix-Pass Full KFall Dataset Run Summary
+===========================================================================
+Train subjects: 26 (1880 fall trials)
+Test subjects (HELD-OUT): 6 (439 fall trials)
+Pipeline errors: 0
+
+NOTE ON SAMPLE SIZE: 32 total subjects, ~26 train / 6 test after the 80/20
+subject-level split, is a small base for subject-level splitting -- every
+held-out number above should be read with that in mind, not as more
+statistically solid than it is.
+
+Gate outcomes (pre-registered before touching test subjects):
+  1.1 direction accuracy >= 80% held-out: 90.7% -- CLEARED
+  1.3 time-to-impact r improves >= 0.1 over constant baseline (~0): r=0.534 -- CLEARED
+  1.5/1.7 torque/strategy: no accuracy gate (impulse-momentum formula + ceiling-derived decision) -- saturation rate reported as a finding, see 1.5_torque_magnitude.txt
+
+Per-parameter result files in this folder:
+  1.1_direction_classifier.txt   1.5_torque_magnitude.txt
+  1.2_com_estimation.txt          1.6_torque_profile.txt
+  1.3_time_to_impact.txt          1.7_recovery_strategy.txt
+  1.4_capture_point_xcom.txt      2.1_stance_leg_classifier.txt
+                                   2.2_cause_context_classifier.txt
+  layer_b_full_dataset.csv  (raw per-trial values, train+test, every parameter)

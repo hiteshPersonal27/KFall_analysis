@@ -1,0 +1,7 @@
+1.2 -- CoM Estimation (UNCHANGED -- single-segment approximation is a genuine
+hardware constraint, not a bug; Step 4 confirmed no fake fix was applied here)
+===================================================================================
+Trials evaluated (train+test): 2319
+
+CoM position at onset (m): mean=-0.1805 std=0.2977
+CoM velocity at onset (m/s): mean=0.1624 std=0.2781

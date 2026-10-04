@@ -1,0 +1,13 @@
+1.3 -- Time-to-Impact Estimate (REPLACED, Step 3 -- causal 3-param regression
+t ~ a + b*v0 + c*gyr_early, replacing the old single-constant kinematic model)
+===================================================================================
+
+[TRAIN (used to fit regression coefficients)] subjects=26 trials=1880
+  formula mean=732.8ms std=67.9ms | empirical mean=732.8ms std=153.4ms
+  mean signed diff=-0.0ms  mean abs diff=105.8ms  correlation r=0.443
+
+[TEST -- HELD-OUT, evaluated once] subjects=6 trials=439
+  formula mean=738.1ms std=60.6ms | empirical mean=711.6ms std=148.7ms
+  mean signed diff=26.5ms  mean abs diff=101.8ms  correlation r=0.534
+
+Gate: held-out r improves >= 0.1 over constant-baseline r (~0). RESULT: r=0.534 -- CLEARED

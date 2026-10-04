@@ -9,6 +9,12 @@ that pattern. Two related but separate investigations live here:
 - `paper_implementation/` — a from-scratch reproduction of the source paper's own
   three benchmark algorithms (threshold, SVM, ConvLSTM), evaluated against the
   paper's published Table 3 numbers. See `paper_implementation/README.md`.
+- `layer_b_translation/` — SthiraSangyaan's Layer B (Translation Layer): converts
+  a confirmed fall event into actuator commands (direction, time-to-impact,
+  torque, recovery strategy) for a fall-prevention exoskeleton. Validated on a
+  train/held-out-test subject split, with known issues and open problems
+  explicitly documented. See `layer_b_translation/README.md` and
+  `layer_b_translation/docs/KNOWN_ISSUES_AND_FIXES.md`.
 
 ## Setup
 
@@ -49,6 +55,15 @@ KFall/
 │   ├── evaluate.py                    #   unified comparison vs. the paper's Table 3
 │   ├── results/                       #   per-trial predictions + comparison.md
 │   └── README.md                      #   run commands + full methodology notes
+│
+├── layer_b_translation/               # Layer B (Translation Layer): fall -> actuator commands
+│   ├── phase1_formulas/               #   1.1-1.7: direction, CoM, TTI, XCoM, torque, profile, strategy
+│   ├── phase2_models/                 #   2.1 stance leg (unvalidated), 2.2 cause/context
+│   ├── split_utils.py                 #   shared train/test subject split (reuses make_subject_split)
+│   ├── pipeline.py                    #   run_layer_b(trial) -- chains every component
+│   ├── results/                       #   per-parameter train vs. held-out-test numbers + full CSV
+│   ├── docs/                          #   implementation plan + KNOWN_ISSUES_AND_FIXES.md
+│   └── README.md                      #   run commands + headline results
 │
 ├── sensor_data/, label_data/, *.zip   # raw dataset (gitignored)
 ├── requirements.txt

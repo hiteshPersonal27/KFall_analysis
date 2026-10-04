@@ -1,0 +1,13 @@
+1.6 -- Torque Profile Shape (trapezoidal ramp, sized to reaction_time_ms
+not the full time_to_impact_ms -- Step 3's causal decision-delay correction)
+===================================================================================
+
+[TRAIN] subjects=26 trials=1880
+  peak hip (clamped) torque: mean=40.00 max=40.00 Nm
+  peak knee (clamped) torque: mean=39.99 max=40.00 Nm
+  trials hitting the safety ceiling: 1880/1880 (100.0%)
+
+[TEST] subjects=6 trials=439
+  peak hip (clamped) torque: mean=40.00 max=40.00 Nm
+  peak knee (clamped) torque: mean=39.97 max=40.00 Nm
+  trials hitting the safety ceiling: 439/439 (100.0%)
